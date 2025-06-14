@@ -1,0 +1,179 @@
+import json
+import os
+
+
+# Constantes
+
+ARCHIVO_BICICLETAS = 'bicicletas.json'
+
+
+# Funciones utilitarias
+
+
+def cargar_datos():
+    if os.path.exists(ARCHIVO_BICICLETAS):
+        with open(ARCHIVO_BICICLETAS, 'r') as archivo:
+            return json.load(archivo)
+    else:
+        return []
+
+def guardar_datos(bicicletas):
+    with open(ARCHIVO_BICICLETAS, 'w') as archivo:
+        json.dump(bicicletas, archivo, indent=4)
+
+def generar_id(bicicletas):
+    if bicicletas:
+        return max(b['id'] for b in bicicletas) + 1
+    else:
+        return 1
+
+
+# Funciones de CRUD
+
+
+def alta_bicicleta(bicicletas):
+    print("\n--- Alta de Bicicleta ---")
+    modelo = input("Modelo: ")
+    tamaño = input("Tamaño: ")
+    color = input("Color: ")
+    stock = int(input("Stock disponible: "))
+
+    bicicleta = {
+        "id": generar_id(bicicletas),
+        "modelo": modelo,
+        "tamaño": tamaño,
+        "color": color,
+        "stock": stock
+    }
+
+    bicicletas.append(bicicleta)
+    guardar_datos(bicicletas)
+    print("✅ Bicicleta agregada con éxito.")
+
+def baja_bicicleta(bicicletas):
+    print("\n--- Baja de Bicicleta ---")
+    id_baja = int(input("Ingrese el ID de la bicicleta a eliminar: "))
+    bicicleta = next((b for b in bicicletas if b['id'] == id_baja), None)
+
+    if bicicleta:
+        bicicletas.remove(bicicleta)
+        guardar_datos(bicicletas)
+        print("✅ Bicicleta eliminada.")
+    else:
+        print("⚠️ No se encontró la bicicleta con ese ID.")
+
+def modificar_bicicleta(bicicletas):
+    print("\n--- Modificación de Bicicleta ---")
+    id_mod = int(input("Ingrese el ID de la bicicleta a modificar: "))
+    bicicleta = next((b for b in bicicletas if b['id'] == id_mod), None)
+
+    if bicicleta:
+        print(f"Modificando bicicleta ID {id_mod}: {bicicleta}")
+        bicicleta['modelo'] = input(f"Nuevo modelo ({bicicleta['modelo']}): ") or bicicleta['modelo']
+        bicicleta['tamaño'] = input(f"Nuevo tamaño ({bicicleta['tamaño']}): ") or bicicleta['tamaño']
+        bicicleta['color'] = input(f"Nuevo color ({bicicleta['color']}): ") or bicicleta['color']
+        nuevo_stock = input(f"Nuevo stock ({bicicleta['stock']}): ")
+        if nuevo_stock:
+            bicicleta['stock'] = int(nuevo_stock)
+        
+        guardar_datos(bicicletas)
+        print("✅ Bicicleta modificada.")
+    else:
+        print("⚠️ No se encontró la bicicleta con ese ID.")
+
+
+# Funciones de Listado e Informes
+
+
+def listar_bicicletas(bicicletas):
+    print("\n--- Listado de Bicicletas ---")
+    if not bicicletas:
+        print("No hay bicicletas registradas.")
+        return
+    for b in bicicletas:
+        print(f"ID: {b['id']} | Modelo: {b['modelo']} | Tamaño: {b['tamaño']} | Color: {b['color']} | Stock: {b['stock']}")
+
+def reporte_stock_total(bicicletas):
+    print("\n--- Reporte de Stock Total ---")
+    total_stock = sum(b['stock'] for b in bicicletas)
+    print(f"Total de bicicletas en stock: {total_stock}")
+
+
+# Menú principal
+
+
+def menu_admin(bicicletas):
+    while True:
+        print("\n--- Menú Administrador ---")
+        print("1. Alta de Bicicleta")
+        print("2. Baja de Bicicleta")
+        print("3. Modificación de Bicicleta")
+        print("4. Listar Bicicletas")
+        print("5. Reporte de Stock Total")
+        print("6. Salir")
+        opcion = input("Seleccione una opción: ")
+
+        if opcion == '1':
+            alta_bicicleta(bicicletas)
+        elif opcion == '2':
+            baja_bicicleta(bicicletas)
+        elif opcion == '3':
+            modificar_bicicleta(bicicletas)
+        elif opcion == '4':
+            listar_bicicletas(bicicletas)
+        elif opcion == '5':
+            reporte_stock_total(bicicletas)
+        elif opcion == '6':
+            break
+        else:
+            print("⚠️ Opción no válida.")
+
+def menu_cliente(bicicletas):
+    while True:
+        print("\n--- Menú Cliente ---")
+        print("1. Ver catálogo de bicicletas")
+        print("2. Reservar bicicleta (simulación)")
+        print("3. Salir")
+        opcion = input("Seleccione una opción: ")
+
+        if opcion == '1':
+            listar_bicicletas(bicicletas)
+        elif opcion == '2':
+            listar_bicicletas(bicicletas)
+            id_reserva = int(input("Ingrese el ID de la bicicleta que desea reservar: "))
+            bicicleta = next((b for b in bicicletas if b['id'] == id_reserva), None)
+
+            if bicicleta and bicicleta['stock'] > 0:
+                print(f"✅ Ha reservado una bicicleta {bicicleta['modelo']} ({bicicleta['color']}). ¡Gracias por su compra!")
+            else:
+                print("⚠️ Bicicleta no disponible.")
+        elif opcion == '3':
+            break
+        else:
+            print("⚠️ Opción no válida.")
+
+
+# Programa principal
+
+def main():
+    bicicletas = cargar_datos()
+
+    while True:
+        print("\n=== Tienda de Bicicletas ===")
+        print("1. Ingresar como Administrador")
+        print("2. Ingresar como Cliente")
+        print("3. Salir")
+        opcion = input("Seleccione una opción: ")
+
+        if opcion == '1':
+            menu_admin(bicicletas)
+        elif opcion == '2':
+            menu_cliente(bicicletas)
+        elif opcion == '3':
+            print("👋 ¡Gracias por usar el sistema!")
+            break
+        else:
+            print("⚠️ Opción no válida.")
+
+if __name__ == "__main__":
+    main()
